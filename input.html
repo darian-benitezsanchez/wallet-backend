@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Strata Wallet Generator</title>
+  <style>
+    /* Generator Page Styles */
+    body { margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background:#f5f7fa; }
+    main { padding:1rem 1.5rem; margin-top:64px; }
+    label { font-weight:500; }
+    input[type=file] { margin:0 .5rem; }
+    button { margin-left:1rem; padding:.4rem 1rem; font-size:.95rem; cursor:pointer; }
+    textarea {
+      width:100%; height:400px; margin-top:1rem;
+      font-family:monospace; font-size:.85rem; line-height:1.3;
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="logo">Strata Wallet Generator</div>
+  </header>
+
+  <main>
+    <div>
+      <label for="csvFile">Upload Tracks CSV:</label>
+      <input type="file" id="csvFile" accept=".csv">
+      <button id="generateBtn">Generate</button>
+    </div>
+    <h2>Generated Wallet Page Code</h2>
+    <textarea id="generatedCode" readonly placeholder="After clicking Generate, your wallet page code will appear here…"></textarea>
+  </main>
+
+  <script>
+    // Grab elements
+    const csvInput = document.getElementById('csvFile');
+    const genBtn   = document.getElementById('generateBtn');
+    const output   = document.getElementById('generatedCode');
+
+    // Shared wallet CSS including Strata dashboard nav styles
+    const walletCss = `
+* { box-sizing:border-box; margin:0; padding:0 }
+body { background:#f5f7fa; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+
+/* Strata Top Navigation */
+.top-nav {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:0.75rem 2rem; background:#fff; border-bottom:1px solid #eee;
+  position:fixed; top:0; left:0; width:100%; z-index:1000;
+}
+.top-nav .logo { font-weight:600; font-size:1.25rem; color:#1a1a1a; }
+.top-nav .nav-links { list-style:none; display:flex; gap:1.25rem; }
+.top-nav .nav-links a { text-decoration:none; color:#333; font-weight:500; }
+.top-nav .actions { display:flex; align-items:center; gap:1rem; }
+.top-nav .actions i { font-size:1.1rem; color:#555; cursor:pointer; }
+.top-nav .actions .avatar {
+  width:32px; height:32px; background:#ccc; border-radius:50%;
+}
+.top-nav .btn-free {
+  background:#6a45e5; color:#fff; border:none;
+  padding:0.5rem 1rem; border-radius:4px; cursor:pointer; font-weight:600;
+}
+
+/* Wallet Content */
+.container{display:flex;align-items:flex-start;gap:40px;width:100%;padding:2rem 1.5rem;margin-top:64px}
+.wallet-column{display:flex;align-items:center;gap:16px}
+.tracks-column{display:flex;flex-direction:column;gap:40px}
+.track-row{display:flex;align-items:center;gap:16px}
+.card{background:#fff;border-radius:12px;box-shadow:0 6px 12px rgba(0,0,0,0.1);padding:16px;cursor:pointer;user-select:none;text-align:center}
+.wallet-card{width:200px}
+.wallet-card h1{font-size:1.3rem;font-weight:600;color:#111}
+.wallet-card p{margin-top:4px;font-size:.9rem;font-style:italic;color:#2F80ED}
+.arrow{width:0;height:0;border-top:12px solid transparent;border-bottom:12px solid transparent;border-left:20px solid #ccc;opacity:0;transition:opacity .3s ease}
+.arrow.visible{opacity:1}
+.track-card{width:260px;background:#2F80ED;border-radius:16px;box-shadow:0 8px 16px rgba(0,0,0,0.15);color:#fff;padding:24px;display:none;flex-direction:column;align-items:center}
+.track-card.show{display:flex;animation:slideIn .4s ease-out}
+.track-card h2{margin-bottom:16px;font-size:1.4rem;font-weight:500}
+.track-icon{width:80px;height:80px;background:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 8px rgba(0,0,0,0.2)}
+.track-icon svg{width:36px;height:36px}
+.items-container{display:none;flex-direction:column;gap:16px}
+.items-container.show{display:flex;animation:slideIn .4s ease-out}
+.item-card{width:200px;padding:12px}
+.item-card p{margin:0;font-size:1rem;font-weight:500;color:#111}
+@keyframes slideIn{from{transform:translateX(30px);opacity:0}to{transform:translateX(0);opacity:1}}`;
+
+    // Build the standalone wallet page HTML
+    function buildFullHtml(rows) {
+      let html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Strata Digital Wallet</title>
+  <link
+    rel="stylesheet"
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    integrity="sha512-Fo3rlrZj/k7ujTnHg4C+X9d9I+F1EogOZb6PnT3U3V1CeOcXrjNmq9nYFyV1NiwGzArJYItgGn1L3XMKr2Nz6g=="
+    crossorigin="anonymous"
+    referrerpolicy="no-referrer"
+  />
+  <style>${walletCss}</style>
+</head>
+<body>
+  <header class="top-nav">
+    <div class="logo">strata.</div>
+    <ul class="nav-links">
+      <li><a href="#">Dashboard</a></li>
+      <li><a href="#">Explore</a></li>
+      <li><a href="#">Wallet</a></li>
+      <li><a href="#">Rewards</a></li>
+    </ul>
+    <div class="actions">
+      <i class="fas fa-search"></i>
+      <i class="far fa-bell"></i>
+      <div class="avatar"></div>
+      <button class="btn-free">Log Out</button>
+    </div>
+  </header>
+
+  <div class="container">
+    <div class="wallet-column">
+      <div class="card wallet-card" id="wallet">
+        <h1>Jason's Wallet</h1>
+        <p>Click to Open</p>
+      </div>
+      <div class="arrow" id="walletArrow"></div>
+    </div>
+    <div class="tracks-column">`;
+
+      rows.forEach(r => {
+        html += `
+      <div class="track-row">
+        <div class="card track-card">
+          <h2>${r.title}</h2>
+          <div class="track-icon">
+            <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M4 12h16" stroke="#2F80ED" stroke-width="2" stroke-linecap="round"/>
+              <path d="M14 14c2 0 4-1.5 4-4s-1.5-4-4-4" stroke="#2F80ED" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+          </div>
+        </div>
+        <div class="arrow track-arrow"></div>
+        <div class="items-container">
+          ${r.items.map(i => `<div class="card item-card"><p>${i}</p></div>`).join('')}
+        </div>
+      </div>`;
+      });
+
+      html += `
+    </div>
+  </div>
+
+  <script>
+    const wallet      = document.getElementById('wallet');
+    const walletArrow = document.getElementById('walletArrow');
+    const tCards      = document.querySelectorAll('.track-card');
+    const tArrows     = document.querySelectorAll('.track-arrow');
+    const tItems      = document.querySelectorAll('.items-container');
+
+    wallet.addEventListener('click', () => {
+      walletArrow.classList.toggle('visible');
+      tCards.forEach(tc => tc.classList.toggle('show'));
+      if (!document.querySelector('.track-card.show')) {
+        tArrows.forEach(a => a.classList.remove('visible'));
+        tItems.forEach(ic => ic.classList.remove('show'));
+      }
+    });
+
+    document.querySelectorAll('.track-row').forEach(row => {
+      const card  = row.querySelector('.track-card');
+      const arrow = row.querySelector('.track-arrow');
+      const items = row.querySelector('.items-container');
+      card.addEventListener('click', () => {
+        arrow.classList.toggle('visible');
+        items.classList.toggle('show');
+      });
+    });
+  <\/script>
+</body>
+</html>`;
+
+      return html.trim();
+    }
+
+    // Quick CSV parse (split on first comma)
+    function parseCsv(text) {
+      const lines = text.trim().split(/\r?\n/).filter(l=>l.trim());
+      if (lines.length < 2) return [];
+      lines.shift(); // drop header
+      return lines.map(line => {
+        const [rawTrack, rawItems] = line.split(/,(.+)/);
+        const title = rawTrack.trim() || 'Untitled Track';
+        const items = (rawItems||'').split(',').map(x=>x.trim()).filter(x=>x);
+        return { title, items };
+      });
+    }
+
+    // Generate on button click
+    genBtn.addEventListener('click', () => {
+      const file = csvInput.files[0];
+      if (!file) {
+        alert('Please upload a CSV file first.');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = () => {
+        const rows = parseCsv(reader.result);
+        if (!rows.length) {
+          alert('CSV must have at least one data row with Track,Items');
+          return;
+        }
+        output.value = buildFullHtml(rows);
+      };
+      reader.readAsText(file);
+    });
+  </script>
+</body>
+</html>
